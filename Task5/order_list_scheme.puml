@@ -1,0 +1,36 @@
+@startuml
+
+actor User
+
+participant Internet_shop
+participant Shop_API
+participant Cache
+participant Shop_DB
+
+== Операция чтения ==
+
+User -> Internet_shop : Запрос списка заказов
+Internet_shop -> Shop_API : Направление запроса к API
+Shop_API -> Cache : Проверка данных в кеше
+alt Кеш-попадание
+    Cache --> Shop_API : Возврат списка заказов из кеша
+    Shop_API --> Internet_shop : Возврат списка заказов
+else Кеш-промах
+    Shop_API -> Shop_DB : Запрос списка заказов из БД
+    Shop_DB --> Shop_API : Возврат списка заказов
+    Shop_API --> Internet_shop : Возврат списка заказов
+    Shop_API -> Cache : Обновление кеша
+end
+Internet_shop --> User : Отображение списка заказов
+
+== Операция записи ==
+
+User -> Internet_shop : Обновление статуса заказа
+Internet_shop -> Shop_API : Направление запроса на обновление к API
+Shop_API -> Shop_DB : Обновление данных в БД
+Shop_DB --> Shop_API : Подтверждение обновления
+Shop_API -> Cache : Инвалидация кеша
+Shop_API --> Internet_shop : Подтверждение обновления
+Internet_shop --> User : Подтверждение обновления
+
+@enduml
